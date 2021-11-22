@@ -99,12 +99,13 @@ export default class VGGLoader extends React.Component<
         });
     };
     this.container.appendChild(script);
+    this.canvas.addEventListener('mousedown', (e: any) => e.target.focus());
   }
 
   render() {
     return (
       <div ref={(container) => (this.container = container)}>
-        <canvas id="canvas" ref={(canvas) => (this.canvas = canvas)}></canvas>
+        <canvas ref={(canvas) => (this.canvas = canvas)} tabIndex={-1}></canvas>
       </div>
     );
   }
