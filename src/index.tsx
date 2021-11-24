@@ -75,7 +75,7 @@ export default class VGGLoader extends React.Component<
       createModule({
         noInitialRun: true,
         canvas: this.canvas,
-        locateFile: function(path: string, prefix: string) {
+        locateFile: function (path: string, prefix: string) {
           if (path.endsWith('.data')) {
             return wasmHost + '/' + path;
           }
