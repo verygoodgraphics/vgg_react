@@ -5,10 +5,7 @@ export interface IVGGLoaderProps {
   height?: number;
 }
 
-interface IVGGLoaderState {
-  name: string;
-  url: string;
-}
+interface IVGGLoaderState {}
 
 export default class VGGLoader extends React.Component<
   IVGGLoaderProps,
@@ -20,20 +17,15 @@ export default class VGGLoader extends React.Component<
 
   constructor(props: IVGGLoaderProps) {
     super(props);
-    this.state = {
-      name: '',
-      url: '',
-    };
   }
 
-  setWork(name: string, url: string) {
-    this.setState({ name, url });
-  }
-
-  loadWork() {
-    const { name, url } = this.state;
+  async loadWork(name: string, url: string) {
     if (!name || !url) {
       return;
+    }
+    const sleep = (ms: number) => new Promise((res) => setTimeout(res, ms));
+    while (!this.Module) {
+      await sleep(30);
     }
     fetch(url)
       .then((res) => {
@@ -84,7 +76,6 @@ export default class VGGLoader extends React.Component<
       })
         .then((Module: any) => {
           this.Module = Module;
-          this.loadWork();
 
           // NOTE: this call never returns
           Module.ccall(
