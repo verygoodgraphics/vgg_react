@@ -3,6 +3,7 @@ import React from 'react';
 export interface IVGGLoaderProps {
   width?: number;
   height?: number;
+  token?: string;
 }
 
 interface IVGGLoaderState {}
@@ -14,6 +15,8 @@ export default class VGGLoader extends React.Component<
   container: any;
   canvas: any;
   Module: any;
+
+  static host = 'https://verygoodgraphics.com';
 
   constructor(props: IVGGLoaderProps) {
     super(props);
@@ -52,8 +55,24 @@ export default class VGGLoader extends React.Component<
       });
   }
 
+  async loadWorkByToken(token: string) {
+    if (!token) {
+      return;
+    }
+    try {
+      const url = `${VGGLoader.host}/api/work/getWorkByToken/${token}`
+      const res = await fetch(url);
+      if (res.ok) {
+        const data = await res.json();
+        return this.loadWork(data.name, `${VGGLoader.host}${data.url}`);
+      }
+    } catch (err) {
+      console.log(`Failed to load work by token: ${err}`)
+    }
+  }
+
   componentDidMount() {
-    const wasmHost = 'https://verygoodgraphics.com/runtime';
+    const wasmHost = `${VGGLoader.host}/runtime`;
     const script = document.createElement('script');
     script.src = `${wasmHost}/runtime.js`;
     script.async = true;
@@ -77,12 +96,13 @@ export default class VGGLoader extends React.Component<
         .then((Module: any) => {
           this.Module = Module;
 
-          // NOTE: this call never returns
+          const w = this.props.width || 300;
+          const h = this.props.height || 200;
           Module.ccall(
             'emscripten_main',
-            null,
+            "void",
             ['number', 'number'],
-            [this.props.width || 300, this.props.height || 200],
+            [w, h],
           );
         })
         .catch((e: any) => {
@@ -91,6 +111,10 @@ export default class VGGLoader extends React.Component<
     };
     this.container.appendChild(script);
     this.canvas.addEventListener('mousedown', (e: any) => e.target.focus());
+
+    if (this.props.token) {
+      this.loadWorkByToken(this.props.token)
+    }
   }
 
   render() {

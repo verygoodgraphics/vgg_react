@@ -7,13 +7,18 @@ export default class IndexPage extends React.Component {
   }
 
   componentDidMount() {
-    this.refs.vggLoader.loadWork('hello', '/hello.vgg');
+    // this.refs.vggLoader.loadWork('hello', '/hello.vgg');
   }
 
   render() {
     return (
       <div style={{ backgroundColor: 'black' }}>
-        <VGGLoader ref={'vggLoader'} />
+        <VGGLoader
+          ref={'vggLoader'}
+          token={'ckxuj3g5l00089cp5ipekbdw2'}
+          width={800}
+          height={500}
+        />
       </div>
     );
   }
