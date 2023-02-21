@@ -16,7 +16,7 @@ export default function Home() {
       </Head>
       <main className={styles.main}>
         <VggRunner
-          token={'ckxuj3g5l00089cp5ipekbdw2'}
+          token={'clednbqwy001njxt5owbled9c'}
           width={800}
           height={500}
         />

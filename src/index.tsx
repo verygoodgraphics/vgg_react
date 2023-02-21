@@ -26,8 +26,8 @@ export default function VggRunner({ token, width, height, onload }: VggRunnerPro
     }
     initWasmRef.current = true;
 
-    fetchVggCode(containerRef, canvasRef, wasmInstanceRef, width, height, onload);
-    fetchVggFile(wasmInstanceRef, token);
+    setupVggEngine(containerRef, canvasRef, wasmInstanceRef, width, height, onload);
+    getVggWorkUrlByToken(wasmInstanceRef, token);
 
   }, [token]);
 
@@ -38,10 +38,10 @@ export default function VggRunner({ token, width, height, onload }: VggRunnerPro
   );
 }
 
-function fetchVggCode(containerRef: RefObject<HTMLDivElement>, canvasRef: RefObject<HTMLCanvasElement>,
+function setupVggEngine(containerRef: RefObject<HTMLDivElement>, canvasRef: RefObject<HTMLCanvasElement>,
   wasmInstanceRef: MutableRefObject<any>, width: number, height: number,
   onload?: VggRunnerOnloadFunction) {
-  // fetch js
+  // fetch runtime.js
   const wasmHost = `${runtimeHost}/runtime`;
   const script = document.createElement('script');
   script.src = `${wasmHost}/runtime.js`;
@@ -54,8 +54,7 @@ function fetchVggCode(containerRef: RefObject<HTMLDivElement>, canvasRef: RefObj
         return Promise.reject('Failed to load VGG runtime!');
       });
 
-    // create wasm instance
-    console.log('#vgg, create wasm instance, canvas is: ', canvasRef.current);
+    // create runtime wasm instance
     createModule({
       noInitialRun: true,
       canvas: canvasRef.current,
@@ -71,7 +70,7 @@ function fetchVggCode(containerRef: RefObject<HTMLDivElement>, canvasRef: RefObj
         onload(wasmInstanceRef.current);
       }
 
-      console.log('#vgg, call emscripten_main');
+      // run vgg
       wasmInstanceRef.current.ccall(
         'emscripten_main',
         "void",
@@ -87,7 +86,7 @@ function fetchVggCode(containerRef: RefObject<HTMLDivElement>, canvasRef: RefObj
   canvasRef.current?.addEventListener('mousedown', (e: any) => e.target.focus());
 }
 
-async function fetchVggFile(wasmInstanceRef: RefObject<any>, token: string) {
+async function getVggWorkUrlByToken(wasmInstanceRef: RefObject<any>, token: string) {
   if (!token) {
     return;
   }
@@ -96,14 +95,14 @@ async function fetchVggFile(wasmInstanceRef: RefObject<any>, token: string) {
     const res = await fetch(url);
     if (res.ok) {
       const data = await res.json();
-      return loadWork(wasmInstanceRef, data.name, `${apiHost}${data.url}`);
+      return fetchVggWorkFileByUrlAndLoadIt(wasmInstanceRef, data.name, `${apiHost}${data.url}`);
     }
   } catch (err) {
-    console.log(`Failed to load work by token: ${err}`)
+    console.error(`Failed to load work by token: ${err}`)
   }
 }
 
-async function loadWork(wasmInstanceRef: RefObject<any>, name: string, url: string) {
+async function fetchVggWorkFileByUrlAndLoadIt(wasmInstanceRef: RefObject<any>, name: string, url: string) {
   if (!name || !url) {
     return;
   }
@@ -118,7 +117,6 @@ async function loadWork(wasmInstanceRef: RefObject<any>, name: string, url: stri
     throw new Error(res.statusText);
   }).then((buf) => {
     const data = new Uint8Array(buf);
-    console.log('#vgg, call load_file_from_mem');
     if (!wasmInstanceRef.current.ccall(
       'load_file_from_mem',
       'boolean', // return type
@@ -130,10 +128,5 @@ async function loadWork(wasmInstanceRef: RefObject<any>, name: string, url: stri
     console.error(`Failed to load work: ${err.message}`);
   });
 }
-
-// function runVgg() {
-// }
-// function loadVggFile() {
-// }
 
 export type { VggRunnerProps, VggRunnerOnloadFunction }
