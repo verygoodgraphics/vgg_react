@@ -11,8 +11,7 @@ interface VggRunnerProps {
   onload?: VggRunnerOnloadFunction,
 }
 
-// const host = 'https://verygoodgraphics.com';
-const host = '';
+const host = 'http://s3.vgg.cool/production/';
 
 export default function VggRunner({ token, width, height, onload }: VggRunnerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
