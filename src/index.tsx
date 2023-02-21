@@ -11,7 +11,8 @@ interface VggRunnerProps {
   onload?: VggRunnerOnloadFunction,
 }
 
-const host = 'http://s3.vgg.cool/production/';
+const apiHost = 'https://verygoodgraphics.com';
+const runtimeHost = 'http://s3.vgg.cool/production/';
 
 export default function VggRunner({ token, width, height, onload }: VggRunnerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -41,7 +42,7 @@ function fetchVggCode(containerRef: RefObject<HTMLDivElement>, canvasRef: RefObj
   wasmInstanceRef: MutableRefObject<any>, width: number, height: number,
   onload?: VggRunnerOnloadFunction) {
   // fetch js
-  const wasmHost = `${host}/runtime`;
+  const wasmHost = `${runtimeHost}/runtime`;
   const script = document.createElement('script');
   script.src = `${wasmHost}/runtime.js`;
   script.async = true;
@@ -91,11 +92,11 @@ async function fetchVggFile(wasmInstanceRef: RefObject<any>, token: string) {
     return;
   }
   try {
-    const url = `${host}/api/work/getWorkByToken/${token}`
+    const url = `${apiHost}/api/work/getWorkByToken/${token}`
     const res = await fetch(url);
     if (res.ok) {
       const data = await res.json();
-      return loadWork(wasmInstanceRef, data.name, `${host}${data.url}`);
+      return loadWork(wasmInstanceRef, data.name, `${apiHost}${data.url}`);
     }
   } catch (err) {
     console.log(`Failed to load work by token: ${err}`)
