@@ -1,127 +1,173 @@
+import { useRef } from 'react';
+import { useEffect } from 'react';
+import { RefObject, MutableRefObject } from 'react';
 import React from 'react';
 
-export interface IVGGLoaderProps {
-  width?: number;
-  height?: number;
-  token?: string;
+type VggRunnerOnloadFunction = (wasmInstance: any) => void;
+
+interface VggRunnerProps {
+  token: string;
+  width: number;
+  height: number;
+  onload?: VggRunnerOnloadFunction;
 }
 
-interface IVGGLoaderState {}
+const apiHost = 'https://verygoodgraphics.com';
+const runtimeHost = 'http://s3.vgg.cool/production/';
 
-export default class VGGLoader extends React.Component<
-  IVGGLoaderProps,
-  IVGGLoaderState
-> {
-  container: any;
-  canvas: any;
-  Module: any;
+export default function VggRunner({
+  token,
+  width,
+  height,
+  onload,
+}: VggRunnerProps): JSX.Element {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const wasmInstanceRef = useRef<any>(null);
+  const initWasmRef = useRef(false);
 
-  static host = 'https://verygoodgraphics.com';
-
-  constructor(props: IVGGLoaderProps) {
-    super(props);
-  }
-
-  async loadWork(name: string, url: string) {
-    if (!name || !url) {
+  useEffect(() => {
+    if (initWasmRef.current) {
       return;
     }
-    const sleep = (ms: number) => new Promise((res) => setTimeout(res, ms));
-    while (!this.Module) {
-      await sleep(30);
-    }
-    fetch(url)
-      .then((res) => {
-        if (res.ok) {
-          return res.arrayBuffer();
-        }
-        throw new Error(res.statusText);
-      })
-      .then((buf) => {
-        const data = new Uint8Array(buf);
-        if (
-          !this.Module.ccall(
-            'load_file_from_mem',
-            'boolean', // return type
-            ['string', 'array', 'number'], // argument types
-            [name, data, data.length],
-          )
-        ) {
-          throw new Error('load failed!');
-        }
-      })
-      .catch((err) => {
-        console.error(`Failed to load work: ${err.message}`);
-      });
-  }
+    initWasmRef.current = true;
 
-  async loadWorkByToken(token: string) {
-    if (!token) {
-      return;
-    }
-    try {
-      const url = `${VGGLoader.host}/api/work/getWorkByToken/${token}`
-      const res = await fetch(url);
-      if (res.ok) {
-        const data = await res.json();
-        return this.loadWork(data.name, `${VGGLoader.host}${data.url}`);
-      }
-    } catch (err) {
-      console.log(`Failed to load work by token: ${err}`)
-    }
-  }
-
-  componentDidMount() {
-    const wasmHost = `${VGGLoader.host}/runtime`;
-    const script = document.createElement('script');
-    script.src = `${wasmHost}/runtime.js`;
-    script.async = true;
-    script.onload = () => {
-      const createModule =
-        // @ts-ignore
-        window.createModule ||
-        (() => {
-          return Promise.reject('Failed to load VGG runtime!');
-        });
-      createModule({
-        noInitialRun: true,
-        canvas: this.canvas,
-        locateFile: function (path: string, prefix: string) {
-          if (path.endsWith('.data')) {
-            return wasmHost + '/' + path;
-          }
-          return prefix + path;
-        },
-      })
-        .then((Module: any) => {
-          this.Module = Module;
-
-          const w = this.props.width || 300;
-          const h = this.props.height || 200;
-          Module.ccall(
-            'emscripten_main',
-            "void",
-            ['number', 'number'],
-            [w, h],
-          );
-        })
-        .catch((e: any) => {
-          console.error(e);
-        });
-    };
-    this.container.appendChild(script);
-    this.canvas.addEventListener('mousedown', (e: any) => e.target.focus());
-
-    if (this.props.token) {
-      this.loadWorkByToken(this.props.token)
-    }
-  }
-
-  render() {
-    return (
-      <div ref={(container) => (this.container = container)}>
-        <canvas ref={(canvas) => (this.canvas = canvas)} tabIndex={-1}></canvas>
-      </div>
+    setupVggEngine(
+      containerRef,
+      canvasRef,
+      wasmInstanceRef,
+      width,
+      height,
+      onload
     );
+    getVggWorkUrlByToken(wasmInstanceRef, token);
+  }, [token, width, height, onload]);
+
+  return (
+    <div ref={containerRef}>
+      <canvas
+        ref={canvasRef}
+        tabIndex={-1}
+        style={{ backgroundColor: 'black', width: '800px', height: '600px' }}
+      />
+    </div>
+  );
+}
+
+function setupVggEngine(
+  containerRef: RefObject<HTMLDivElement>,
+  canvasRef: RefObject<HTMLCanvasElement>,
+  wasmInstanceRef: MutableRefObject<any>,
+  width: number,
+  height: number,
+  onload?: VggRunnerOnloadFunction
+): void {
+  // fetch runtime.js
+  const wasmHost = `${runtimeHost}/runtime`;
+  const script = document.createElement('script');
+  script.src = `${wasmHost}/runtime.js`;
+  script.async = true;
+  script.onload = (): void => {
+    const createModule =
+      // @ts-ignore
+      window.createModule ||
+      ((): Promise<void> => {
+        return Promise.reject('Failed to load VGG runtime!');
+      });
+
+    // create runtime wasm instance
+    createModule({
+      noInitialRun: true,
+      canvas: canvasRef.current,
+      locateFile: function (path: string, prefix: string) {
+        if (path.endsWith('.data')) {
+          return wasmHost + '/' + path;
+        }
+        return prefix + path;
+      },
+    })
+      .then((Module: any) => {
+        wasmInstanceRef.current = Module;
+        if (onload) {
+          onload(wasmInstanceRef.current);
+        }
+
+        // run vgg
+        wasmInstanceRef.current.ccall(
+          'emscripten_main',
+          'void',
+          ['number', 'number'],
+          [{ width }, { height }]
+        );
+      })
+      .catch((e: any) => {
+        console.error(e);
+      });
+  };
+
+  containerRef.current?.appendChild(script);
+  canvasRef.current?.addEventListener('mousedown', (e: any) =>
+    e.target.focus()
+  );
+}
+
+async function getVggWorkUrlByToken(
+  wasmInstanceRef: RefObject<any>,
+  token: string
+): Promise<void> {
+  if (!token) {
+    return;
   }
+  try {
+    const url = `${apiHost}/api/work/getWorkByToken/${token}`;
+    const res = await fetch(url);
+    if (res.ok) {
+      const data = await res.json();
+      fetchVggWorkFileByUrlAndLoadIt(
+        wasmInstanceRef,
+        data.name,
+        `${apiHost}${data.url}`
+      );
+    }
+  } catch (err) {
+    console.error(`Failed to load work by token: ${err}`);
+  }
+}
+
+async function fetchVggWorkFileByUrlAndLoadIt(
+  wasmInstanceRef: RefObject<any>,
+  name: string,
+  url: string
+): Promise<void> {
+  if (!name || !url) {
+    return;
+  }
+  const sleep = (ms: number): Promise<void> =>
+    new Promise(res => setTimeout(res, ms));
+  while (!wasmInstanceRef.current) {
+    await sleep(30);
+  }
+  fetch(url)
+    .then(res => {
+      if (res.ok) {
+        return res.arrayBuffer();
+      }
+      throw new Error(res.statusText);
+    })
+    .then(buf => {
+      const data = new Uint8Array(buf);
+      if (
+        !wasmInstanceRef.current.ccall(
+          'load_file_from_mem',
+          'boolean', // return type
+          ['string', 'array', 'number'], // argument types
+          [name, data, data.length]
+        )
+      ) {
+        throw new Error('load failed!');
+      }
+    })
+    .catch(err => {
+      console.error(`Failed to load work: ${err.message}`);
+    });
 }
