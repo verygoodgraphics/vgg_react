@@ -44,11 +44,11 @@ export default function VggRunner({
   }, [token, width, height, onload]);
 
   return (
-    <div ref={containerRef}>
+    <div ref={containerRef} style={{ width: '100%' }} >
       <canvas
         ref={canvasRef}
         tabIndex={-1}
-        style={{ backgroundColor: 'black', width: '800px', height: '600px' }}
+        style={{ width: '100%' }}
       />
     </div>
   );
@@ -97,7 +97,7 @@ function setupVggEngine(
           'emscripten_main',
           'void',
           ['number', 'number'],
-          [{ width }, { height }]
+          [width, height]
         );
       })
       .catch((e: any) => {
