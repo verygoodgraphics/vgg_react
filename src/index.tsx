@@ -9,6 +9,7 @@ interface VggRunnerProps {
   token: string;
   width: number;
   height: number;
+  canvasStyle?: object;
   onload?: VggRunnerOnloadFunction;
 }
 
@@ -19,6 +20,7 @@ export default function VggRunner({
   token,
   width,
   height,
+  canvasStyle = {},
   onload,
 }: VggRunnerProps): JSX.Element {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -44,11 +46,11 @@ export default function VggRunner({
   }, [token, width, height, onload]);
 
   return (
-    <div ref={containerRef} style={{ width: '100%' }} >
+    <div ref={containerRef}>
       <canvas
         ref={canvasRef}
         tabIndex={-1}
-        style={{ width: '100%' }}
+        style={{ ...canvasStyle, display: 'block' }}
       />
     </div>
   );
