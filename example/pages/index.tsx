@@ -34,7 +34,7 @@ export default function Home() {
         />
       </div>
 
-      <div >
+      {/* <div >
         <VggRunner
           token={'clednbqwy001njxt5owbled9c'}
           width={800}
@@ -51,7 +51,7 @@ export default function Home() {
           height={600}
           canvasStyle={{ width: '100vw', height: '100vh' }}
         />
-      </div>
+      </div> */}
     </>
   )
 }

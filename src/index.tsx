@@ -15,8 +15,10 @@ interface VggRunnerProps {
   onload?: VggRunnerOnloadFunction;
 }
 
-const apiHost = 'https://verygoodgraphics.com';
-const runtimeHost = 'http://s3.vgg.cool/production/';
+// const apiHost = 'https://verygoodgraphics.com';
+// const runtimeHost = 'http://s3.vgg.cool/production/';
+const runtimeHost = 'http://s3.vgg.cool/test/';
+// const runtimeHost = 'http://localhost:3000/';
 
 
 const VggRunner = forwardRef(({
@@ -137,16 +139,21 @@ async function getVggWorkUrlByToken(
     return;
   }
   try {
-    const url = `${apiHost}/api/work/getWorkByToken/${token}`;
-    const res = await fetch(url);
-    if (res.ok) {
-      const data = await res.json();
-      fetchVggWorkFileByUrlAndLoadIt(
-        wasmInstanceRef,
-        data.name,
-        `${apiHost}${data.url}`
-      );
-    }
+    // const url = `${apiHost}/api/work/getWorkByToken/${token}`;
+    // const res = await fetch(url);
+    // if (res.ok) {
+    //   const data = await res.json();
+    //   fetchVggWorkFileByUrlAndLoadIt(
+    //     wasmInstanceRef,
+    //     data.name,
+    //     `${apiHost}${data.url}`
+    //   );
+    // }
+    fetchVggWorkFileByUrlAndLoadIt(
+      wasmInstanceRef,
+      'demo',
+      'http://s3.vgg.cool/test/work/vgg-work-3.zip'
+    );
   } catch (err) {
     console.error(`Failed to load work by token: ${err}`);
   }
@@ -173,7 +180,7 @@ async function fetchVggWorkFileByUrlAndLoadIt(
       throw new Error(res.statusText);
     })
     .then(buf => {
-      const data = new Uint8Array(buf);
+      const data = new Int8Array(buf);
       if (
         !wasmInstanceRef.current.ccall(
           'load_file_from_mem',
