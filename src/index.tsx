@@ -1,7 +1,9 @@
-import { useRef } from 'react';
+import { forwardRef, useImperativeHandle, useRef } from 'react';
 import { useEffect } from 'react';
 import { RefObject, MutableRefObject } from 'react';
 import React from 'react';
+
+import { setVgg, getVgg } from '../../vgg_js_sdk';
 
 type VggRunnerOnloadFunction = (wasmInstance: any) => void;
 
@@ -16,13 +18,14 @@ interface VggRunnerProps {
 const apiHost = 'https://verygoodgraphics.com';
 const runtimeHost = 'http://s3.vgg.cool/production/';
 
-export default function VggRunner({
+
+const VggRunner = forwardRef(({
   token,
   width,
   height,
   canvasStyle = {},
   onload,
-}: VggRunnerProps): JSX.Element {
+}: VggRunnerProps, ref) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wasmInstanceRef = useRef<any>(null);
@@ -45,6 +48,13 @@ export default function VggRunner({
     getVggWorkUrlByToken(wasmInstanceRef, token);
   }, [token, width, height, onload]);
 
+  useImperativeHandle(ref, () => ({
+    async getSdk(): Promise<any> {
+      // todo: get sdk
+      return await getVgg();
+    }
+  }));
+
   return (
     <div ref={containerRef}>
       <canvas
@@ -54,7 +64,7 @@ export default function VggRunner({
       />
     </div>
   );
-}
+});
 
 function setupVggEngine(
   containerRef: RefObject<HTMLDivElement>,
@@ -90,9 +100,15 @@ function setupVggEngine(
     })
       .then((Module: any) => {
         wasmInstanceRef.current = Module;
+        // todo: set env
+        setVgg(wasmInstanceRef.current);
         if (onload) {
-          onload(wasmInstanceRef.current);
+          // todo: get sdk
+          getVgg().then((vgg) => {
+            onload(vgg);
+          });
         }
+
 
         // run vgg
         wasmInstanceRef.current.ccall(
@@ -173,3 +189,5 @@ async function fetchVggWorkFileByUrlAndLoadIt(
       console.error(`Failed to load work: ${err.message}`);
     });
 }
+
+export default VggRunner;
