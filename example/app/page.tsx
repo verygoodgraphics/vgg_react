@@ -1,3 +1,5 @@
+'use client'
+
 import Head from 'next/head'
 import { useCallback, useRef } from 'react';
 import VggRunner from '../../'
