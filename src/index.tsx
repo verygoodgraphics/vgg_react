@@ -3,12 +3,13 @@ import { useEffect } from 'react';
 import { RefObject, MutableRefObject } from 'react';
 import React from 'react';
 
-import { setVgg, getVgg } from '../../vgg_js_sdk';
+import { setVgg, getVggSdk } from '@verygoodgraphics/vgg-sdk';
 
 type VggRunnerOnloadFunction = (wasmInstance: any) => void;
 
 interface VggRunnerProps {
-  token: string;
+  token?: string;
+  src?: string;
   width: number;
   height: number;
   canvasStyle?: object;
@@ -16,55 +17,62 @@ interface VggRunnerProps {
 }
 
 const apiHost = 'https://verygoodgraphics.com';
-const runtimeHost = 'http://s3.vgg.cool/production/';
+const runtimeBaseUrl = 'http://s3.vgg.cool/production/runtime/v23.07';
+const runtimeFileName = 'wasm_main.js';
 
+const VggRunner = forwardRef(
+  (
+    { token, src, width, height, canvasStyle = {}, onload }: VggRunnerProps,
+    ref
+  ) => {
+    const containerRef = useRef<HTMLDivElement>(null);
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const wasmInstanceRef = useRef<any>(null);
+    const initWasmRef = useRef(false);
 
-const VggRunner = forwardRef(({
-  token,
-  width,
-  height,
-  canvasStyle = {},
-  onload,
-}: VggRunnerProps, ref) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const wasmInstanceRef = useRef<any>(null);
-  const initWasmRef = useRef(false);
+    useEffect(() => {
+      if (initWasmRef.current) {
+        return;
+      }
+      initWasmRef.current = true;
 
-  useEffect(() => {
-    if (initWasmRef.current) {
-      return;
-    }
-    initWasmRef.current = true;
+      setupVggEngine(
+        containerRef,
+        canvasRef,
+        wasmInstanceRef,
+        width,
+        height,
+        onload
+      );
 
-    setupVggEngine(
-      containerRef,
-      canvasRef,
-      wasmInstanceRef,
-      width,
-      height,
-      onload
+      if (src) {
+        fetchVggWorkFileByUrlAndLoadIt(wasmInstanceRef, 'vgg file', src);
+      } else if (token) {
+        getVggWorkUrlByToken(wasmInstanceRef, token);
+      } else {
+        console.error(
+          'Cannot resolve file url, either src or token should be provided'
+        );
+      }
+    }, [token, width, height, onload]);
+
+    useImperativeHandle(ref, () => ({
+      async getSdk(): Promise<any> {
+        return await getVggSdk();
+      },
+    }));
+
+    return (
+      <div ref={containerRef}>
+        <canvas
+          ref={canvasRef}
+          tabIndex={-1}
+          style={{ ...canvasStyle, display: 'block' }}
+        />
+      </div>
     );
-    getVggWorkUrlByToken(wasmInstanceRef, token);
-  }, [token, width, height, onload]);
-
-  useImperativeHandle(ref, () => ({
-    async getSdk(): Promise<any> {
-      // todo: get sdk
-      return await getVgg();
-    }
-  }));
-
-  return (
-    <div ref={containerRef}>
-      <canvas
-        ref={canvasRef}
-        tabIndex={-1}
-        style={{ ...canvasStyle, display: 'block' }}
-      />
-    </div>
-  );
-});
+  }
+);
 
 function setupVggEngine(
   containerRef: RefObject<HTMLDivElement>,
@@ -74,10 +82,9 @@ function setupVggEngine(
   height: number,
   onload?: VggRunnerOnloadFunction
 ): void {
-  // fetch runtime.js
-  const wasmHost = `${runtimeHost}/runtime`;
+  // fetch wasm js file
   const script = document.createElement('script');
-  script.src = `${wasmHost}/runtime.js`;
+  script.src = `${runtimeBaseUrl}/${runtimeFileName}`;
   script.async = true;
   script.onload = (): void => {
     const createModule =
@@ -91,9 +98,9 @@ function setupVggEngine(
     createModule({
       noInitialRun: true,
       canvas: canvasRef.current,
-      locateFile: function (path: string, prefix: string) {
+      locateFile: function(path: string, prefix: string) {
         if (path.endsWith('.data')) {
-          return wasmHost + '/' + path;
+          return runtimeBaseUrl + '/' + path;
         }
         return prefix + path;
       },
@@ -103,12 +110,10 @@ function setupVggEngine(
         // todo: set env
         setVgg(wasmInstanceRef.current);
         if (onload) {
-          // todo: get sdk
-          getVgg().then((vgg) => {
-            onload(vgg);
+          getVggSdk().then(sdk => {
+            onload(sdk);
           });
         }
-
 
         // run vgg
         wasmInstanceRef.current.ccall(
@@ -173,7 +178,7 @@ async function fetchVggWorkFileByUrlAndLoadIt(
       throw new Error(res.statusText);
     })
     .then(buf => {
-      const data = new Uint8Array(buf);
+      const data = new Int8Array(buf);
       if (
         !wasmInstanceRef.current.ccall(
           'load_file_from_mem',

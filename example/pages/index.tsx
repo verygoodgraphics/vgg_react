@@ -5,9 +5,8 @@ import VggRunner from '../../'
 
 export default function Home() {
   const vgg1 = useRef<any>(null);
-  const vgg2 = useRef<any>(null);
 
-  const onLoad1 = useCallback((vggSdk: any) => {
+  const onLoad = useCallback((vggSdk: any) => {
     console.log('#demo, callback vgg sdk: ', vggSdk);
 
     vgg1.current.getSdk().then((vggSdkGot: any) => {
@@ -26,32 +25,15 @@ export default function Home() {
 
       <div >
         <VggRunner
-          token={'clednbqwy001njxt5owbled9c'}
+          src={'http://s3.vgg.cool/test/work/21.zip'}
           width={800}
           height={600}
           ref={vgg1}
-          onload={onLoad1}
-        />
-      </div>
-
-      <div >
-        <VggRunner
-          token={'clednbqwy001njxt5owbled9c'}
-          width={800}
-          height={600}
-          canvasStyle={{ width: '400px', height: '300px' }}
-          ref={vgg2}
-        />
-      </div>
-
-      <div >
-        <VggRunner
-          token={'clednbqwy001njxt5owbled9c'}
-          width={800}
-          height={600}
           canvasStyle={{ width: '100vw', height: '100vh' }}
+          onload={onLoad}
         />
       </div>
+
     </>
   )
 }
