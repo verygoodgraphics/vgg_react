@@ -17,7 +17,7 @@ interface VggRunnerProps {
 }
 
 const apiHost = 'https://verygoodgraphics.com';
-const runtimeBaseUrl = 'http://s3.vgg.cool/production/runtime/v23.07';
+const runtimeBaseUrl = 'https://s3.vgg.cool/production/runtime/v23.07';
 const runtimeFileName = 'wasm_main.js';
 
 const VggRunner = forwardRef(
