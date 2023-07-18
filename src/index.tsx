@@ -17,8 +17,8 @@ interface VggRunnerProps {
 }
 
 const apiHost = 'https://verygoodgraphics.com';
-const runtimeBaseUrl = 'https://s3.vgg.cool/production/runtime/v23.07';
-const runtimeFileName = 'wasm_main.js';
+const runtimeBaseUrl = 'https://s3.vgg.cool/production/runtime/v23.07.18-5d6eee4';
+const vggWasmModuleUrl = runtimeBaseUrl + '/vgg_runtime.js';
 
 const VggRunner = forwardRef(
   (
@@ -82,23 +82,23 @@ function setupVggEngine(
   height: number,
   onload?: VggRunnerOnloadFunction
 ): void {
-  // fetch wasm js file
+  // fetch vgg wasm js file
   const script = document.createElement('script');
-  script.src = `${runtimeBaseUrl}/${runtimeFileName}`;
+  script.src = `${vggWasmModuleUrl}`;
   script.async = true;
   script.onload = (): void => {
-    const createModule =
+    const _vgg_createWasmInstance =
       // @ts-ignore
-      window.createModule ||
+      window._vgg_createWasmInstance ||
       ((): Promise<void> => {
         return Promise.reject('Failed to load VGG runtime!');
       });
 
-    // create runtime wasm instance
-    createModule({
+    // create vgg runtime wasm instance
+    _vgg_createWasmInstance({
       noInitialRun: true,
       canvas: canvasRef.current,
-      locateFile: function(path: string, prefix: string) {
+      locateFile: function (path: string, prefix: string) {
         if (path.endsWith('.data')) {
           return runtimeBaseUrl + '/' + path;
         }
@@ -153,7 +153,7 @@ async function getVggWorkUrlByToken(
       );
     }
   } catch (err) {
-    console.error(`Failed to load work by token: ${err}`);
+    console.error(`Failed to load vgg daruma file by token: ${err}`);
   }
 }
 
@@ -191,7 +191,7 @@ async function fetchVggWorkFileByUrlAndLoadIt(
       }
     })
     .catch(err => {
-      console.error(`Failed to load work: ${err.message}`);
+      console.error(`Failed to load vgg daruma file: ${err.message}`);
     });
 }
 

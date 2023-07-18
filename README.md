@@ -1,6 +1,6 @@
 # VGG Component for React
 
-This React component helps load VGG runtime (of wasm version) as well as VGG work.
+This React component helps load VGG runtime (of wasm version) as well as VGG daruma file.
 
 # Example
 

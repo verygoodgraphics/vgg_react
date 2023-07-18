@@ -27,7 +27,7 @@ export default function Home() {
 
       <div >
         <VggRunner
-          src={'https://s3.vgg.cool/test/work/21.zip'}
+          src={'https://s3.vgg.cool/test/daruma-files/example21.daruma'}
           width={800}
           height={600}
           ref={vgg1}
