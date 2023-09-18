@@ -6,6 +6,7 @@ import React from 'react';
 import { setVgg, getVggSdk } from '@verygoodgraphics/vgg-sdk';
 
 type VggRunnerOnloadFunction = (wasmInstance: any) => void;
+type VggRunnerListenerFunction = (event: any) => void;
 
 interface VggRunnerProps {
   token?: string;
@@ -14,15 +15,18 @@ interface VggRunnerProps {
   height: number;
   canvasStyle?: object;
   onload?: VggRunnerOnloadFunction;
+  listener?: VggRunnerListenerFunction;
 }
 
 const apiHost = 'https://verygoodgraphics.com';
-const runtimeBaseUrl = 'https://s3.vgg.cool/production/runtime/v23.07.18-5d6eee4';
+const runtimeBaseUrl = 'https://s3.vgg.cool/test/runtime/v0.23.09181500';
 const vggWasmModuleUrl = runtimeBaseUrl + '/vgg_runtime.js';
+
+const dicUrl = 'https://s5.vgg.cool/vgg-di-container.esm.js';
 
 const VggRunner = forwardRef(
   (
-    { token, src, width, height, canvasStyle = {}, onload }: VggRunnerProps,
+    { token, src, width, height, canvasStyle = {}, onload, listener }: VggRunnerProps,
     ref
   ) => {
     const containerRef = useRef<HTMLDivElement>(null);
@@ -42,7 +46,8 @@ const VggRunner = forwardRef(
         wasmInstanceRef,
         width,
         height,
-        onload
+        onload,
+        listener
       );
 
       if (src) {
@@ -80,7 +85,8 @@ function setupVggEngine(
   wasmInstanceRef: MutableRefObject<any>,
   width: number,
   height: number,
-  onload?: VggRunnerOnloadFunction
+  onload?: VggRunnerOnloadFunction,
+  listener?: VggRunnerListenerFunction
 ): void {
   // fetch vgg wasm js file
   const script = document.createElement('script');
@@ -114,6 +120,7 @@ function setupVggEngine(
             onload(sdk);
           });
         }
+        saveListener(listener);
 
         // run vgg
         wasmInstanceRef.current.ccall(
@@ -193,6 +200,12 @@ async function fetchVggWorkFileByUrlAndLoadIt(
     .catch(err => {
       console.error(`Failed to load vgg daruma file: ${err.message}`);
     });
+}
+
+async function saveListener(listener?: VggRunnerListenerFunction) {
+  let container = await import(/* webpackIgnore: true */ dicUrl);
+  const key = 'vggListener';
+  container.vggSetObject(key, listener);
 }
 
 export default VggRunner;

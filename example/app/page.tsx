@@ -17,6 +17,11 @@ export default function Home() {
 
   }, [vgg1]);
 
+  const eventHandler = useCallback((event: any) => {
+    console.log('#handle event: ', event);
+
+  }, [vgg1]);
+
   return (
     <>
       <Head>
@@ -27,12 +32,13 @@ export default function Home() {
 
       <div >
         <VggRunner
-          src={'https://s3.vgg.cool/test/daruma-files/example21.daruma'}
+          src={'https://s3.vgg.cool/test/daruma-files/flex_space_between.daruma'}
           width={800}
           height={600}
           ref={vgg1}
           canvasStyle={{ width: '100vw', height: '100vh' }}
           onload={onLoad}
+          listener={eventHandler}
         />
       </div>
 
