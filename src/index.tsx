@@ -16,17 +16,18 @@ interface VggRunnerProps {
   canvasStyle?: object;
   onload?: VggRunnerOnloadFunction;
   listener?: VggRunnerListenerFunction;
+  editMode?: boolean
 }
 
 const apiHost = 'https://verygoodgraphics.com';
-const runtimeBaseUrl = 'https://s3.vgg.cool/test/runtime/v0.23.09181500';
+const runtimeBaseUrl = 'https://s3.vgg.cool/test/runtime/v0.23.09270930';
 const vggWasmModuleUrl = runtimeBaseUrl + '/vgg_runtime.js';
 
 const dicUrl = 'https://s5.vgg.cool/vgg-di-container.esm.js';
 
 const VggRunner = forwardRef(
   (
-    { token, src, width, height, canvasStyle = {}, onload, listener }: VggRunnerProps,
+    { token, src, width, height, canvasStyle = {}, onload, listener, editMode }: VggRunnerProps,
     ref
   ) => {
     const containerRef = useRef<HTMLDivElement>(null);
@@ -47,7 +48,8 @@ const VggRunner = forwardRef(
         width,
         height,
         onload,
-        listener
+        listener,
+        editMode
       );
 
       if (src) {
@@ -86,7 +88,8 @@ function setupVggEngine(
   width: number,
   height: number,
   onload?: VggRunnerOnloadFunction,
-  listener?: VggRunnerListenerFunction
+  listener?: VggRunnerListenerFunction,
+  editMode?: boolean
 ): void {
   // fetch vgg wasm js file
   const script = document.createElement('script');
@@ -126,8 +129,8 @@ function setupVggEngine(
         wasmInstanceRef.current.ccall(
           'emscripten_main',
           'void',
-          ['number', 'number'],
-          [width, height]
+          ['number', 'number', 'boolean'],
+          [width, height, editMode ?? false]
         );
       })
       .catch((e: any) => {

@@ -39,6 +39,7 @@ export default function Home() {
           canvasStyle={{ width: '100vw', height: '100vh' }}
           onload={onLoad}
           listener={eventHandler}
+          editMode={true}
         />
       </div>
 
