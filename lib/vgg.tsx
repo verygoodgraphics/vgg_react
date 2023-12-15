@@ -17,6 +17,7 @@ export interface Props<T extends string | number | symbol>
   onLoad?: (event: VGGEvent, instance: VGG<T>) => Promise<void>
   onLoadError?: (event: VGGEvent) => Promise<void>
   onStateChange?: (event: VGGEvent, instance: VGG<T>) => Promise<void>
+  onSelect?: (event: VGGEvent) => Promise<void>
 }
 
 export function VGGRender<T extends string | number | symbol>(props: Props<T>) {
@@ -29,6 +30,7 @@ export function VGGRender<T extends string | number | symbol>(props: Props<T>) {
     onLoad,
     onLoadError,
     onStateChange,
+    onSelect,
   } = props
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
@@ -49,6 +51,7 @@ export function VGGRender<T extends string | number | symbol>(props: Props<T>) {
           // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-expect-error
           onStateChange,
+          onSelect,
         })
 
         await vgg.load()
