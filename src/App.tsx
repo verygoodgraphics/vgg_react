@@ -13,7 +13,7 @@ function App() {
 
   useEffect(() => {
     if (isLoading || !vgg.current) return
-    vgg.current?.$("2:94").on(EventType.Click, async () => {
+    vgg.current?.$("#vgg_home").on(EventType.Click, async () => {
       window.alert("Hello, VGG!")
     })
   }, [isLoading])
@@ -34,7 +34,7 @@ function App() {
             height: "100vh",
           }}
           onLoad={async (_, instance) => {
-            instance.$("2:94").on(EventType.Click, async () => {
+            instance.$("#vgg_home").on(EventType.Click, async () => {
               window.alert("Hello, VGG!")
             })
           }}
