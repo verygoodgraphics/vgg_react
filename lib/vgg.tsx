@@ -8,7 +8,7 @@ import {
   EventType,
 } from "@verygoodgraphics/vgg-wasm"
 
-export interface Props<T extends string | number | symbol>
+export interface Props<T extends string>
   extends Omit<
     VGGProps,
     "canvas" | "onLoad" | "onLoadError" | "onStateChange"
@@ -20,7 +20,7 @@ export interface Props<T extends string | number | symbol>
   onSelect?: (event: VGGEvent) => Promise<void>
 }
 
-export function VGGRender<T extends string | number | symbol>(props: Props<T>) {
+export function VGGRender<T extends string>(props: Props<T>) {
   const {
     src,
     canvasStyle,
