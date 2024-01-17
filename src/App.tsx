@@ -1,7 +1,9 @@
 import { useEffect } from "react"
-import { EventType } from "../lib"
-import { VGGRender } from "../lib/vgg"
-import { useVGG } from "../lib/use-vgg"
+// import { EventType } from "../lib"
+// import { VGGRender } from "../lib/vgg"
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-expect-error
+import { useVGG, VGGRender, EventType } from "../dist/vgg-react.js"
 
 import "./App.css"
 
@@ -13,8 +15,12 @@ function App() {
 
   useEffect(() => {
     if (isLoading || !vgg.current) return
-    vgg.current?.$("#vgg_home").on(EventType.Click, async () => {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-expect-error
+    vgg.current?.$("#vgg_home").on(EventType.Click, async (_, { set, get }) => {
       window.alert("Hello, VGG!")
+      console.log(set, get)
+      console.log(get("#vgg_home"))
     })
   }, [isLoading])
 
@@ -33,6 +39,8 @@ function App() {
             width: "50vw",
             height: "100vh",
           }}
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-expect-error
           onLoad={async (_, instance) => {
             instance.$("#vgg_home").on(EventType.Click, async () => {
               window.alert("Hello, VGG!")
