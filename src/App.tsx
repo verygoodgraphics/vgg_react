@@ -15,12 +15,8 @@ function App() {
 
   useEffect(() => {
     if (isLoading || !vgg.current) return
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-expect-error
-    vgg.current?.$("#vgg_home").on(EventType.Click, async (_, { set, get }) => {
-      window.alert("Hello, VGG!")
-      console.log(set, get)
-      console.log(get("#vgg_home"))
+    vgg.current?.$("#vgg-btn-get-started").on(EventType.Click, async () => {
+      window.alert("Hello World from useVGG hook!")
     })
   }, [isLoading])
 
@@ -42,8 +38,8 @@ function App() {
           // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-expect-error
           onLoad={async (_, instance) => {
-            instance.$("#vgg_home").on(EventType.Click, async () => {
-              window.alert("Hello, VGG!")
+            instance.$("#vgg-btn-get-started").on(EventType.Click, async () => {
+              window.alert("Hello World from VGGRender Component!")
             })
           }}
         />
