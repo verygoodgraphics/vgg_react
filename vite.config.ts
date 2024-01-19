@@ -13,7 +13,7 @@ export default defineConfig({
       fileName: "vgg-react",
     },
     rollupOptions: {
-      external: ["react", "@verygoodgraphics/vgg-wasm"],
+      external: ["react"],
       output: {
         globals: {
           react: "React",

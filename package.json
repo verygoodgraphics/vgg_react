@@ -5,7 +5,7 @@
     "type": "git",
     "url": "https://github.com/verygoodgraphics/vgg_react.git"
   },
-  "version": "0.0.9",
+  "version": "0.0.12",
   "type": "module",
   "files": [
     "dist"
@@ -35,7 +35,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@verygoodgraphics/vgg-wasm": "^0.0.16",
+    "@verygoodgraphics/vgg-wasm": "^0.0.18",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
